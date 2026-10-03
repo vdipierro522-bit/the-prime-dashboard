@@ -487,10 +487,11 @@ const UI = {
       const goal = goals.find(g => (g.category || '').toLowerCase() === (task.category || '').toLowerCase());
       
       if (goal) {
+         let currentProgress = parseInt(goal.progress, 10) || 0;
          if (task.completed) {
-            goal.progress = Math.min(100, goal.progress + 1);
+            goal.progress = Math.min(100, currentProgress + 1);
          } else {
-            goal.progress = Math.max(0, goal.progress - 1);
+            goal.progress = Math.max(0, currentProgress - 1);
          }
          PrimeStore.save();
          this.renderGoals();
