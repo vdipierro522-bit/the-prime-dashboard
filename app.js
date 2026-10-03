@@ -74,6 +74,25 @@ const PrimeStore = {
       console.warn("Storage load failed, using defaults:", e);
       this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
     }
+    
+    // Migrations
+    if (!this.data.history) this.data.history = {};
+    if (!this.data.sprintStartDate) {
+      const now = new Date();
+      this.data.sprintStartDate = now.toISOString().split('T')[0];
+      this.save();
+    }
+  },
+
+  updateDailyHistory() {
+    const today = new Date().toISOString().split('T')[0];
+    const tasks = this.getTasks();
+    if (!this.data.history) this.data.history = {};
+    this.data.history[today] = {
+      t: tasks.length,
+      c: tasks.filter(t => t.completed).length
+    };
+    this.save();
   },
 
   save() {
@@ -322,6 +341,16 @@ const UI = {
     this.renderQuote();
     this.renderTasks();
     this.renderGoals();
+
+    // Aggiorna Sprint Badge
+    const badge = document.getElementById('sprintBadge');
+    if (badge && PrimeStore.data.sprintStartDate) {
+       const start = new Date(PrimeStore.data.sprintStartDate);
+       const now = new Date();
+       const diffTime = Math.abs(now - start);
+       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1; 
+       badge.textContent = `Giorno ${diffDays}/90`;
+    }
   },
 
   renderQuote() {
@@ -349,25 +378,55 @@ const UI = {
       const isCurrent = d.toDateString() === now.toDateString();
       const isPast = d < new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
+      const dStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      
+      let dotClass = 'pending';
+      let dotInner = '';
+
+      if (isCurrent) {
+        const tasks = PrimeStore.getTasks();
+        const tot = tasks.length;
+        const comp = tasks.filter(t=>t.completed).length;
+        if (tot > 0 && comp === tot) {
+           dotClass = 'completed';
+           dotInner = SVG_ICONS.check;
+        } else if (tot > 0) {
+           dotClass = 'partial';
+           dotInner = `<span style="font-size:8px; font-weight:800; color:var(--text-primary)">${comp}/${tot}</span>`;
+        }
+      } else if (isPast) {
+        const h = PrimeStore.data.history ? PrimeStore.data.history[dStr] : null;
+        if (h && h.t > 0) {
+           if (h.c === h.t) {
+             dotClass = 'completed';
+             dotInner = SVG_ICONS.check;
+           } else {
+             dotClass = 'failed';
+             dotInner = `<span style="font-size:8px; font-weight:800;">${h.c}/${h.t}</span>`;
+           }
+        } else {
+           dotClass = 'failed';
+           dotInner = `<span style="font-size:12px; font-weight:800;">×</span>`;
+        }
+      }
+
       baseDays.push({
         letter: DAYS_LETTERS[i],
         num: d.getDate(),
-        done: isPast,
+        dotClass: dotClass,
+        dotInner: dotInner,
         current: isCurrent
       });
     }
 
     strip.innerHTML = baseDays.map((d, index) => {
       const isCurrent = d.current ? 'current' : '';
-      const dotClass = d.done ? 'completed' : 'pending';
-      const dotInner = d.done ? SVG_ICONS.check : '';
-
       return `
         <div class="day-pill ${isCurrent}" data-day-index="${index}" onclick="UI.onSelectHomeDay(${index})">
           <span class="day-letter">${d.letter}</span>
           <span class="day-number">${d.num}</span>
-          <div class="day-status-dot ${dotClass}">
-            ${dotInner}
+          <div class="day-status-dot ${d.dotClass}">
+            ${d.dotInner}
           </div>
         </div>
       `;
@@ -383,6 +442,9 @@ const UI = {
   },
 
   renderTasks() {
+    PrimeStore.updateDailyHistory();
+    this.renderHomeWeekStrip();
+
     const tasks = PrimeStore.getTasks();
     const taskList = document.getElementById('homeTaskList');
     const badge = document.getElementById('taskCounterBadge');
