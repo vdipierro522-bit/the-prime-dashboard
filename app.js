@@ -392,7 +392,7 @@ const UI = {
            dotInner = SVG_ICONS.check;
         } else if (tot > 0) {
            dotClass = 'partial';
-           dotInner = `<span style="font-size:8px; font-weight:800; color:var(--text-primary)">${comp}/${tot}</span>`;
+           dotInner = `<span style="font-size:9px; font-weight:800;">${comp}/${tot}</span>`;
         }
       } else if (isPast) {
         const h = PrimeStore.data.history ? PrimeStore.data.history[dStr] : null;
@@ -401,8 +401,8 @@ const UI = {
              dotClass = 'completed';
              dotInner = SVG_ICONS.check;
            } else {
-             dotClass = 'failed';
-             dotInner = `<span style="font-size:8px; font-weight:800;">${h.c}/${h.t}</span>`;
+             dotClass = 'partial'; // Arancione anche per i giorni passati incompleti? Il prompt dice "arancioni quelli tipo 2/3"
+             dotInner = `<span style="font-size:9px; font-weight:800;">${h.c}/${h.t}</span>`;
            }
         } else {
            dotClass = 'failed';
