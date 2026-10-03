@@ -481,6 +481,21 @@ const UI = {
     if (task) {
       task.completed = !task.completed;
       PrimeStore.save();
+      
+      // Collegamento automatico Task -> Obiettivo (Gamification leggera)
+      const goals = PrimeStore.getGoals();
+      const goal = goals.find(g => (g.category || '').toLowerCase() === (task.category || '').toLowerCase());
+      
+      if (goal) {
+         if (task.completed) {
+            goal.progress = Math.min(100, goal.progress + 1);
+         } else {
+            goal.progress = Math.max(0, goal.progress - 1);
+         }
+         PrimeStore.save();
+         this.renderGoals();
+      }
+
       this.renderTasks();
       this.showToast(task.completed ? "Task completata! 🎯" : "Task riaperta");
     }
