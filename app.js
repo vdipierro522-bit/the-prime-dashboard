@@ -335,16 +335,27 @@ const UI = {
     const strip = document.getElementById('homeWeekStrip');
     if (!strip) return;
 
-    // Days representation (L 12, M 13, M 14, G 15, V 16, S 17, D 18)
-    const baseDays = [
-      { letter: 'L', num: 12, done: true },
-      { letter: 'M', num: 13, done: true },
-      { letter: 'M', num: 14, done: true, current: true },
-      { letter: 'G', num: 15, done: false },
-      { letter: 'V', num: 16, done: true },
-      { letter: 'S', num: 17, done: false },
-      { letter: 'D', num: 18, done: false }
-    ];
+    const now = new Date();
+    const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - dayOfWeek);
+
+    const baseDays = [];
+    const DAYS_LETTERS = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
+    
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const isCurrent = d.toDateString() === now.toDateString();
+      const isPast = d < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      baseDays.push({
+        letter: DAYS_LETTERS[i],
+        num: d.getDate(),
+        done: isPast,
+        current: isCurrent
+      });
+    }
 
     strip.innerHTML = baseDays.map((d, index) => {
       const isCurrent = d.current ? 'current' : '';
@@ -452,33 +463,44 @@ const UI = {
     const container = document.getElementById('plannerDaysSelector');
     if (!container) return;
 
-    const baseDays = [
-      { name: 'Lun', num: 13 },
-      { name: 'Mar', num: 14 },
-      { name: 'Mer', num: 15 },
-      { name: 'Gio', num: 16 },
-      { name: 'Ven', num: 17 },
-      { name: 'Sab', num: 18 },
-      { name: 'Dom', num: 19 }
-    ];
+    const now = new Date();
+    const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - dayOfWeek);
+
+    const baseDays = [];
+    const DAYS_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      baseDays.push({
+        name: DAYS_NAMES_SHORT[i],
+        num: d.getDate(),
+        index: i
+      });
+    }
+    
+    // Vista settimanale
+    baseDays.push({ name: 'Week', num: 'All', index: 7 });
 
     const activeIndex = PrimeStore.data.activePlannerDay;
 
-    container.innerHTML = baseDays.map((d, index) => {
-      const isActive = index === activeIndex ? 'active' : '';
+    container.innerHTML = baseDays.map((d) => {
+      const isActive = d.index === activeIndex ? 'active' : '';
       return `
-        <div class="planner-day-pill ${isActive}" onclick="UI.selectPlannerDay(${index})">
+        <div class="planner-day-pill ${isActive}" onclick="UI.selectPlannerDay(${d.index})">
           <span class="day-name">${d.name}</span>
           <span class="day-num">${d.num}</span>
         </div>
       `;
     }).join('');
 
-    // Also populate modal day select dropdown
+    // Also populate modal day select dropdown (solo giorni reali 0-6)
     const daySelect = document.getElementById('plannerDaySelect');
     if (daySelect) {
-      daySelect.innerHTML = baseDays.map((d, index) => `
-        <option value="${index}" ${index === activeIndex ? 'selected' : ''}>${d.name} ${d.num}</option>
+      daySelect.innerHTML = baseDays.filter(d => d.index < 7).map((d) => `
+        <option value="${d.index}" ${d.index === (activeIndex === 7 ? dayOfWeek : activeIndex) ? 'selected' : ''}>${d.name} ${d.num}</option>
       `).join('');
     }
   },
@@ -491,7 +513,16 @@ const UI = {
 
   renderPlannerTimeline() {
     const currentDay = PrimeStore.data.activePlannerDay;
-    const blocks = PrimeStore.getPlannerBlocks(currentDay);
+    let blocks = [];
+    if (currentDay === 7) {
+      blocks = [...(PrimeStore.data.plannerBlocks || [])]
+        .sort((a, b) => {
+          if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+          return (a.startTime || '').localeCompare(b.startTime || '');
+        });
+    } else {
+      blocks = PrimeStore.getPlannerBlocks(currentDay);
+    }
     const container = document.getElementById('plannerTimelineList');
     const emptyState = document.getElementById('plannerEmptyState');
     if (!container) return;
@@ -511,6 +542,15 @@ const UI = {
       const iconSvg = SVG_ICONS[iconKey] || SVG_ICONS.sun;
 
       const timeRange = b.endTime ? `${b.startTime} – ${b.endTime}` : b.startTime;
+      
+      let subtitleHtml = '';
+      if (currentDay === 7) {
+         const dayName = DAYS_NAMES[b.dayIndex] || '';
+         const subText = b.subtitle ? ` • ${this.escapeHtml(b.subtitle)}` : '';
+         subtitleHtml = `<p class="timeline-card-sub"><strong style="color:var(--text-primary)">${dayName}</strong>${subText}</p>`;
+      } else if (b.subtitle) {
+         subtitleHtml = `<p class="timeline-card-sub">${this.escapeHtml(b.subtitle)}</p>`;
+      }
 
       return `
         <div class="timeline-row ${themeClass}" data-block-id="${b.id}">
@@ -525,7 +565,7 @@ const UI = {
             </div>
             <div class="timeline-card-body">
               <h4 class="timeline-card-title">${this.escapeHtml(b.title)}</h4>
-              ${b.subtitle ? `<p class="timeline-card-sub">${this.escapeHtml(b.subtitle)}</p>` : ''}
+              ${subtitleHtml}
               ${b.endTime ? `<div class="timeline-card-time">${timeRange}</div>` : ''}
             </div>
           </div>
@@ -538,7 +578,14 @@ const UI = {
   // INBOX SCREEN RENDERING
   // ------------------------------------------------------------------------
   renderInbox() {
-    const items = PrimeStore.getInboxItems(this.activeInboxFilter);
+    let items = PrimeStore.getInboxItems(this.activeInboxFilter === 'Archivio' ? 'all' : this.activeInboxFilter);
+    
+    if (this.activeInboxFilter === 'Archivio') {
+       items = items.filter(i => i.processed);
+    } else {
+       items = items.filter(i => !i.processed);
+    }
+
     const container = document.getElementById('inboxItemsList');
     const emptyState = document.getElementById('inboxEmptyState');
     if (!container) return;
