@@ -193,7 +193,10 @@ const PrimeStore = {
 
   addPlannerBlock(blockData) {
     const newBlock = {
-      id: 'p-' + Date.now(),
+      id: 'p-' + (globalThis.crypto?.randomUUID?.() || Date.now() + '-' + Math.random().toString(16).slice(2)),
+      date: blockData.date || PrimeCalendar.today(),
+      allDay: !!blockData.allDay,
+      repeat: blockData.repeat || 'none',
       dayIndex: typeof blockData.dayIndex === 'number' ? blockData.dayIndex : this.data.activePlannerDay,
       startTime: blockData.startTime || '09:00',
       endTime: blockData.endTime || '',
@@ -356,6 +359,8 @@ const UI = {
     // Scroll to top of content
     document.getElementById('mainContent').scrollTop = 0;
 
+    Calendar.setActive(tabName === 'Planner');
+
     // Configure Floating Action Button (FAB)
     const fab = document.getElementById('globalFabBtn');
     if (fab) {
@@ -471,8 +476,7 @@ const UI = {
 
   onSelectHomeDay(index) {
     // Jump to Planner for this day
-    PrimeStore.data.activePlannerDay = index;
-    PrimeStore.save();
+    Calendar.selectDayIndex(index);
     this.switchTab('Planner');
     this.renderPlanner();
   },
@@ -568,129 +572,9 @@ const UI = {
   // ------------------------------------------------------------------------
   // PLANNER SCREEN RENDERING
   // ------------------------------------------------------------------------
-  renderPlanner() {
-    this.renderPlannerDaySelector();
-    this.renderPlannerTimeline();
-  },
+  renderPlanner() { Calendar.render(); },
+  selectPlannerDay(index) { Calendar.selectDayIndex(index); },
 
-  renderPlannerDaySelector() {
-    const container = document.getElementById('plannerDaysSelector');
-    if (!container) return;
-
-    const now = new Date();
-    const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - dayOfWeek);
-
-    const baseDays = [];
-    const DAYS_NAMES_SHORT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      baseDays.push({
-        name: DAYS_NAMES_SHORT[i],
-        num: d.getDate(),
-        index: i
-      });
-    }
-    
-    // Vista settimanale
-    baseDays.push({ name: 'Week', num: 'All', index: 7 });
-
-    const activeIndex = PrimeStore.data.activePlannerDay;
-
-    container.innerHTML = baseDays.map((d) => {
-      const isActive = d.index === activeIndex ? 'active' : '';
-      return `
-        <div class="planner-day-pill ${isActive}" onclick="UI.selectPlannerDay(${d.index})">
-          <span class="day-name">${d.name}</span>
-          <span class="day-num">${d.num}</span>
-        </div>
-      `;
-    }).join('');
-
-    // Also populate modal day select dropdown (solo giorni reali 0-6)
-    const daySelect = document.getElementById('plannerDaySelect');
-    if (daySelect) {
-      daySelect.innerHTML = baseDays.filter(d => d.index < 7).map((d) => `
-        <option value="${d.index}" ${d.index === (activeIndex === 7 ? dayOfWeek : activeIndex) ? 'selected' : ''}>${d.name} ${d.num}</option>
-      `).join('');
-    }
-  },
-
-  selectPlannerDay(index) {
-    PrimeStore.data.activePlannerDay = index;
-    PrimeStore.save();
-    this.renderPlanner();
-  },
-
-  renderPlannerTimeline() {
-    const currentDay = PrimeStore.data.activePlannerDay;
-    let blocks = [];
-    if (currentDay === 7) {
-      blocks = [...(PrimeStore.data.plannerBlocks || [])]
-        .sort((a, b) => {
-          if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
-          return (a.startTime || '').localeCompare(b.startTime || '');
-        });
-    } else {
-      blocks = PrimeStore.getPlannerBlocks(currentDay);
-    }
-    const container = document.getElementById('plannerTimelineList');
-    const emptyState = document.getElementById('plannerEmptyState');
-    if (!container) return;
-
-    if (blocks.length === 0) {
-      container.innerHTML = '';
-      if (emptyState) emptyState.classList.remove('hidden');
-      return;
-    }
-
-    if (emptyState) emptyState.classList.add('hidden');
-
-    container.innerHTML = blocks.map(b => {
-      const catClass = (b.category || 'Neutral').toLowerCase();
-      const themeClass = `theme-${catClass}`;
-      const iconKey = b.icon || 'sun';
-      const iconSvg = SVG_ICONS[iconKey] || SVG_ICONS.sun;
-
-      const timeRange = b.endTime ? `${b.startTime} – ${b.endTime}` : b.startTime;
-      
-      let subtitleHtml = '';
-      if (currentDay === 7) {
-         const dayName = DAYS_NAMES[b.dayIndex] || '';
-         const subText = b.subtitle ? ` • ${this.escapeHtml(b.subtitle)}` : '';
-         subtitleHtml = `<p class="timeline-card-sub"><strong style="color:var(--text-primary)">${dayName}</strong>${subText}</p>`;
-      } else if (b.subtitle) {
-         subtitleHtml = `<p class="timeline-card-sub">${this.escapeHtml(b.subtitle)}</p>`;
-      }
-
-      return `
-        <div class="timeline-row ${themeClass}" data-block-id="${b.id}">
-          <div class="timeline-time-col">${b.startTime}</div>
-          <div class="timeline-axis-node">
-            <div class="timeline-dot"></div>
-            <div class="timeline-axis-line"></div>
-          </div>
-          <div class="timeline-card ${themeClass}" onclick="UI.editPlannerModal('${b.id}')">
-            <div class="timeline-card-icon">
-              ${iconSvg}
-            </div>
-            <div class="timeline-card-body">
-              <h4 class="timeline-card-title">${this.escapeHtml(b.title)}</h4>
-              ${subtitleHtml}
-              ${b.endTime ? `<div class="timeline-card-time">${timeRange}</div>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  },
-
-  // ------------------------------------------------------------------------
-  // INBOX SCREEN RENDERING
-  // ------------------------------------------------------------------------
   renderInbox() {
     let items = PrimeStore.getInboxItems(this.activeInboxFilter === 'Archivio' ? 'all' : this.activeInboxFilter);
     
@@ -794,60 +678,8 @@ const UI = {
   },
 
   // Planner Modal
-  openAddPlannerModal(prefillTitle = '') {
-    const modal = document.getElementById('plannerModal');
-    const titleHeader = document.getElementById('plannerModalTitle');
-    const idInput = document.getElementById('plannerBlockIdInput');
-    const titleInput = document.getElementById('plannerTitleInput');
-    const subInput = document.getElementById('plannerSubtitleInput');
-    const startInput = document.getElementById('plannerStartTimeInput');
-    const endInput = document.getElementById('plannerEndTimeInput');
-    const delBtn = document.getElementById('deletePlannerBtn');
-    const daySelect = document.getElementById('plannerDaySelect');
-
-    titleHeader.textContent = 'Nuovo Blocco Planner';
-    idInput.value = '';
-    titleInput.value = prefillTitle;
-    subInput.value = '';
-    startInput.value = '10:00';
-    endInput.value = '11:30';
-    delBtn.style.display = 'none';
-
-    if (daySelect) daySelect.value = PrimeStore.data.activePlannerDay;
-
-    modal.classList.add('show');
-    setTimeout(() => titleInput.focus(), 150);
-  },
-
-  editPlannerModal(id) {
-    const block = PrimeStore.data.plannerBlocks.find(b => b.id === id);
-    if (!block) return;
-
-    const modal = document.getElementById('plannerModal');
-    const titleHeader = document.getElementById('plannerModalTitle');
-    const idInput = document.getElementById('plannerBlockIdInput');
-    const titleInput = document.getElementById('plannerTitleInput');
-    const subInput = document.getElementById('plannerSubtitleInput');
-    const startInput = document.getElementById('plannerStartTimeInput');
-    const endInput = document.getElementById('plannerEndTimeInput');
-    const delBtn = document.getElementById('deletePlannerBtn');
-    const daySelect = document.getElementById('plannerDaySelect');
-
-    titleHeader.textContent = 'Modifica Blocco';
-    idInput.value = block.id;
-    titleInput.value = block.title;
-    subInput.value = block.subtitle || '';
-    startInput.value = block.startTime || '09:00';
-    endInput.value = block.endTime || '';
-    delBtn.style.display = 'block';
-
-    if (daySelect) daySelect.value = block.dayIndex;
-
-    const catRadio = document.querySelector(`input[name="plannerCategory"][value="${block.category}"]`);
-    if (catRadio) catRadio.checked = true;
-
-    modal.classList.add('show');
-  },
+  openAddPlannerModal(prefillTitle = '') { Calendar.openEvent(null, { title: prefillTitle }); },
+  editPlannerModal(id) { Calendar.openEvent(id); },
 
   // Goals Modal
   openGoalsModal() {
@@ -1009,18 +841,6 @@ const UI = {
       });
     }
 
-    // Planner Today Button
-    const plannerTodayBtn = document.getElementById('plannerTodayBtn');
-    if (plannerTodayBtn) {
-      plannerTodayBtn.addEventListener('click', () => {
-        const todayDay = 1; // Default Martedì 14 as per reference
-        PrimeStore.data.activePlannerDay = todayDay;
-        PrimeStore.save();
-        this.renderPlanner();
-        this.showToast("Tornato a Oggi");
-      });
-    }
-
     // Global FAB Button (+)
     const fabBtn = document.getElementById('globalFabBtn');
     if (fabBtn) {
@@ -1033,47 +853,7 @@ const UI = {
       });
     }
 
-    // Planner Form Submit
-    const plannerForm = document.getElementById('plannerForm');
-    if (plannerForm) {
-      plannerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = document.getElementById('plannerBlockIdInput').value;
-        const title = document.getElementById('plannerTitleInput').value.trim();
-        const subtitle = document.getElementById('plannerSubtitleInput').value.trim();
-        const startTime = document.getElementById('plannerStartTimeInput').value;
-        const endTime = document.getElementById('plannerEndTimeInput').value;
-        const dayIndex = parseInt(document.getElementById('plannerDaySelect').value, 10);
-        const category = document.querySelector('input[name="plannerCategory"]:checked')?.value || 'Studio';
-
-        if (!title) return;
-
-        if (id) {
-          PrimeStore.updatePlannerBlock(id, { title, subtitle, startTime, endTime, dayIndex, category });
-          this.showToast("Blocco aggiornato");
-        } else {
-          PrimeStore.addPlannerBlock({ title, subtitle, startTime, endTime, dayIndex, category });
-          this.showToast("Blocco aggiunto al Planner!");
-        }
-
-        this.closeAllModals();
-        this.renderPlanner();
-      });
-    }
-
-    // Delete Planner Block Button
-    const deletePlannerBtn = document.getElementById('deletePlannerBtn');
-    if (deletePlannerBtn) {
-      deletePlannerBtn.addEventListener('click', () => {
-        const id = document.getElementById('plannerBlockIdInput').value;
-        if (id) {
-          PrimeStore.deletePlannerBlock(id);
-          this.closeAllModals();
-          this.renderPlanner();
-          this.showToast("Blocco eliminato");
-        }
-      });
-    }
+    Calendar.bindEvents();
 
     // Goals Modal Buttons
     const openGoalsBtn = document.getElementById('openGoalsModalBtn');
@@ -1224,6 +1004,7 @@ const UI = {
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   PrimeStore.init();
+  Calendar.init();
   UI.init();
   console.log("🚀 The Prime Dashboard initialized successfully.");
 });
