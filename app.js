@@ -991,7 +991,7 @@ const UI = {
       const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
       if (!isInput) {
         if (e.key === '1') this.switchTab('Home');
-        if (e.key === '2') this.switchTab('Planner');
+        if (e.key === '2') this.switchTab('Aree');
         if (e.key === '3') this.switchTab('Inbox');
       }
     });
@@ -1003,8 +1003,23 @@ const UI = {
 // 4. APPLICATION INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  try {
   PrimeStore.init();
   Calendar.init();
   UI.init();
   console.log("🚀 The Prime Dashboard initialized successfully.");
+  } catch (error) {
+    // Never replace a damaged or unavailable archive with default data.
+    document.getElementById('mainContent').replaceChildren();
+    const panel = document.createElement('section');
+    const title = document.createElement('h1');
+    title.textContent = 'L’archivio non è stato modificato.';
+    const message = document.createElement('p');
+    message.textContent = 'Impossibile aprire o salvare i dati: ' + error.message + ' Riprova nello stesso browser, senza cancellare i dati del sito.';
+    panel.append(title, message);
+    document.getElementById('mainContent').append(panel);
+    document.getElementById('bottomNavBar').hidden = true;
+    document.getElementById('globalFabBtn').hidden = true;
+    console.error(error);
+  }
 });
