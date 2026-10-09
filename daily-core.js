@@ -93,5 +93,46 @@
     const record=day(data,selected);
     return data.tasks.filter(t=>t.category===area && !t.archived).map(task=>({kind:'task',date:selected,task:{...task,completed:!!record.tasks.find(t=>t.id===task.id)?.completed},source:task})).filter(item=>matches(item,filters));
   }
-  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status,journal,catalog};
+  function writeEntry(data,input,editing={}) {
+    const text=String(input.text||'').trim();
+    if(!text) throw new Error('Scrivi il testo della voce.');
+    if(!valid(input.date)) throw new Error('Data non valida.');
+    if(!['Corpo','Studio','Progetti','Personale'].includes(input.area)) throw new Error('Area non valida.');
+    if(!['task','idea','note'].includes(input.kind)) throw new Error('Tipo di voce non valido.');
+    if(!['normal','high','low','home'].includes(input.priorityLevel)) throw new Error('Priorità non valida.');
+    if(input.reminder && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.reminderTime||'')) throw new Error('Ora del promemoria non valida.');
+    const meta={subject:String(input.subject||''),priorityLevel:input.priorityLevel,reminder:!!input.reminder,reminderTime:input.reminderTime||'09:00'};
+    if(editing.taskId && input.kind!=='task' || editing.entryId && input.kind==='task') throw new Error('Conserva il tipo della voce esistente.');
+    if(input.kind==='task') {
+      const source=editing.taskId ? data.tasks.find(t=>t.id===editing.taskId) : null;
+      const recordDate=editing.recordDate||input.date;
+      if(editing.taskId && recordDate!==input.date) throw new Error('La data dell’attività esistente resta nello storico.');
+      const existing=editing.taskId ? day(data,recordDate).tasks.find(t=>t.id===editing.taskId) : null;
+      if(editing.taskId && !source && !existing) throw new Error('Attività non trovata.');
+      const record=day(data,input.date),id=editing.taskId||uid(),priority=input.priorityLevel==='home';
+      if(priority && !record.priorities.includes(id) && record.priorities.length>=3) throw new Error('Hai già tre priorità. Rimuovine una prima di aggiungerne un’altra.');
+      const updates={title:text,category:input.area,...meta};
+      if(editing.taskId) {
+        if(source) Object.assign(source,updates);
+        if(existing) Object.assign(existing,updates);
+        if(priority && !existing) assign(data,input.date,{...(source||existing),id},true);
+      } else {
+        const task={id,...updates,completed:false};
+        assign(data,input.date,task,priority);data.tasks.push(task);
+      }
+      const assigned=day(data,input.date,true);
+      if(priority && !assigned.priorities.includes(id)) assigned.priorities.push(id);
+      if(!priority) assigned.priorities=assigned.priorities.filter(x=>x!==id);
+      return id;
+    }
+    if(input.priorityLevel==='home') throw new Error('Le priorità Home sono attività.');
+    const updates={kind:input.kind,text,area:input.area,date:input.date,...meta};
+    if(editing.entryId) {
+      const entry=data.areaEntries.find(n=>n.id===editing.entryId);
+      if(!entry) throw new Error('Voce non trovata.');
+      Object.assign(entry,updates);return entry.id;
+    }
+    const entry={id:uid(),...updates};data.areaEntries.push(entry);return entry.id;
+  }
+  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status,journal,catalog,writeEntry};
 });
