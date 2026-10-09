@@ -1,23 +1,6 @@
 /* Home / Aree on the original Prime Dashboard, preserving its archive. */
 'use strict';
-const DAILY_QUOTES = [
-  'Non puoi cambiare il passato, ma puoi costruire un futuro di cui tuo padre sarebbe orgoglioso.',
-  'Non devi fare tutto. Scegli ciò che conta e comincia da lì.',
-  'La disciplina di oggi costruisce la libertà di domani.',
-  'Un passo concreto vale più di un piano perfetto.',
-  'Il ricordo di tuo padre può accompagnarti, un giorno alla volta.',
-  'Puoi custodire il legame con tuo padre e costruire il tuo cammino, con i tuoi tempi.',
-  'Il tuo valore non dipende da quanto riesci a fare oggi.',
-  'Non serve sentirti pronto. Serve fare il primo gesto.',
-  'Studia per capire. Allenati per crescere. Costruisci per imparare.',
-  'Anche una giornata difficile può contenere un piccolo passo avanti.',
-  'Essere costante significa anche imparare a ripartire.',
-  'Onorare il ricordo di tuo padre può voler dire anche prenderti cura di te.',
-  'Novanta giorni. Una direzione. Una scelta concreta ogni giorno.',
-  'Quello che fai con attenzione oggi diventa una capacità domani.',
-  'Fermati, scegli tre priorità, dedica la tua energia alla prima.',
-  'Porta con te ciò che ami. Lascia spazio alla persona che stai diventando.'
-];
+const DAILY_QUOTES = DEFAULT_MOTIVATIONAL_QUOTES;
 
 const DailyApp = {
   C: PrimeDaily, selected: PrimeDaily.today(), area: 'Corpo', lastRaw: null,
@@ -37,6 +20,7 @@ const DailyApp = {
         localStorage.setItem(STORAGE_KEY+'_before_daily_v1',raw);
       }
       data = app.C.migrate(data);
+      app.C.quoteDay(data,app.C.today(),DAILY_QUOTES.length);
       this.data = data;
       app.lastRaw = raw;
       this.save();
@@ -74,7 +58,7 @@ const DailyApp = {
     };
   },
   icon(name,cls='') {
-    const paths={home:'<path d="m3 10 9-7 9 7v11H3Z"/><path d="M9 21v-8h6v8"/>',folder:'<path d="M3 7V4h7l3 3h8v14H3Z"/>',Corpo:'<path d="M3 9v6m4-10v14m10-14v14m4-10v6M7 12h10M3 7h4v10H3Zm14 0h4v10h-4Z"/>',Studio:'<path d="M12 5v16M12 6C8 3 4 3 2 4v16c4-1 7 0 10 2 3-2 6-3 10-2V4c-3-1-7-1-10 2Z"/>',Progetti:'<rect x="4" y="3" width="16" height="14" rx="2"/><path d="m4 17-3 4h22l-3-4M9 21h6"/>',back:'<path d="m15 4-8 8 8 8"/>',chevron:'<path d="m9 5 7 7-7 7"/>',up:'<path d="m5 15 7-7 7 7"/>',plus:'<path d="M12 4v16M4 12h16"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/>',more:'<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>',calendar:'<rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18M7 15h2m3 0h2m3 0h1M7 18h2m3 0h2"/>',flag:'<path d="M5 22V3c5-4 9 4 15 0v11c-6 4-10-4-15 0"/>',bell:'<path d="M4 18h16l-2-4V9a6 6 0 0 0-12 0v5Zm6 3h4"/>',search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',close:'<path d="m5 5 14 14M19 5 5 19"/>'};
+    const paths={home:'<path d="m3 10 9-7 9 7v11H3Z"/><path d="M9 21v-8h6v8"/>',folder:'<path d="M3 7V4h7l3 3h8v14H3Z"/>',Corpo:'<path d="M3 9v6m4-10v14m10-14v14m4-10v6M7 12h10M3 7h4v10H3Zm14 0h4v10h-4Z"/>',Studio:'<path d="M12 5v16M12 6C8 3 4 3 2 4v16c4-1 7 0 10 2 3-2 6-3 10-2V4c-3-1-7-1-10 2Z"/>',Progetti:'<rect x="4" y="3" width="16" height="14" rx="2"/><path d="m4 17-3 4h22l-3-4M9 21h6"/>',back:'<path d="m15 4-8 8 8 8"/>',chevron:'<path d="m9 5 7 7-7 7"/>',up:'<path d="m5 15 7-7 7 7"/>',plus:'<path d="M12 4v16M4 12h16"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/>',more:'<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>',calendar:'<rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18M7 15h2m3 0h2m3 0h1M7 18h2m3 0h2"/>',flag:'<path d="M5 22V3c5-4 9 4 15 0v11c-6 4-10-4-15 0"/>',bell:'<path d="M4 18h16l-2-4V9a6 6 0 0 0-12 0v5Zm6 3h4"/>',search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',pencil:'<path d="m16 3 5 5-12 12-6 1 1-6Zm-10 12 5 5M14 5l5 5"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',close:'<path d="m5 5 14 14M19 5 5 19"/>'};
     return `<svg class="prime-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.folder}</svg>`;
   },
   areaInfo(area) {
@@ -106,7 +90,7 @@ const DailyApp = {
     const dialog=document.createElement('dialog');dialog.id='dailyEditor';dialog.className='entry-editor';
     dialog.innerHTML=`<form id="dailyForm"><header class="editor-header"><button class="icon-button" type="button" data-action="cancel" aria-label="Annulla">${this.icon('back')}</button><h2 id="dailyEditorTitle">Nuova voce</h2><button class="save-button" type="submit">Salva</button></header><div class="entry-kind-tabs" role="group" aria-label="Tipo di voce">${[['task','Attività'],['idea','Idea'],['note','Nota']].map(([kind,label])=>`<button type="button" data-editor-kind="${kind}" aria-pressed="false">${label}</button>`).join('')}</div><label class="visually-hidden" for="dailyText">Testo</label><textarea id="dailyText" class="entry-text" placeholder="Scrivi la tua voce…" required maxlength="4000"></textarea><fieldset class="editor-area-field"><legend>Area</legend><div class="editor-areas">${['Corpo','Studio','Progetti'].map(a=>`<button type="button" class="editor-area theme-${a.toLowerCase()}" data-editor-area="${a}" aria-pressed="false">${this.icon(a)}<span>${a}</span></button>`).join('')}</div><select id="dailyArea" aria-label="Area" hidden><option>Corpo</option><option>Studio</option><option>Progetti</option><option>Personale</option></select><p id="personalAreaHint" hidden>Area attuale: Personale. Puoi scegliere una delle tre aree.</p></fieldset><label class="subject-field" for="dailySubject">Materia / Categoria</label><select class="editor-select" id="dailySubject"></select><div class="editor-metadata"><div class="metadata-row">${this.icon('calendar')}<label for="dailyDatePreset">Data</label><select class="editor-select" id="dailyDatePreset"><option value="today">Oggi</option><option value="yesterday">Ieri</option><option value="tomorrow">Domani</option><option value="custom">Altra data</option></select></div><label class="visually-hidden" for="dailyTaskDate">Giorno</label><input class="editor-select custom-date" id="dailyTaskDate" type="date" required hidden><div class="metadata-row">${this.icon('flag')}<label for="dailyPriority">Priorità</label><select class="editor-select" id="dailyPriority"><option value="normal">Normale</option><option value="high">Alta</option><option value="low">Bassa</option><option value="home">Principale (Home)</option></select></div><div class="metadata-row">${this.icon('bell')}<label for="dailyReminder">Promemoria</label><input id="dailyReminder" class="reminder-switch" type="checkbox"></div><div id="reminderDetails" hidden><label for="dailyReminderTime">Ora</label><input class="editor-select" type="time" id="dailyReminderTime" value="09:00"><small>Compare in app quando è aperta.</small></div></div><p id="dailyEditorError" role="alert"></p><div class="editor-bottom"><p id="dailyEditorHelp">Le voci vengono salvate automaticamente nella tua giornata di diario.</p></div></form>`;
     document.body.append(dialog);
-    for(const [id,cls] of [['dayReview','day-review-dialog'],['areaTools','action-dialog'],['itemActions','action-dialog']]){const el=document.createElement('dialog');el.id=id;el.className=cls;document.body.append(el);}
+    for(const [id,cls] of [['dayReview','day-review-dialog'],['areaTools','action-dialog'],['itemActions','action-dialog'],['deleteConfirm','action-dialog delete-confirm-dialog']]){const el=document.createElement('dialog');el.id=id;el.className=cls;document.body.append(el);}
     const alert=document.createElement('div');alert.id='dailyAlert';alert.className='daily-alert';alert.hidden=true;alert.setAttribute('role','alert');document.body.append(alert);
   },
   fail(err) {const el=document.getElementById('dailyAlert');el.hidden=false;el.textContent=err.message+' Le modifiche non sono state salvate.';},
@@ -118,10 +102,6 @@ const DailyApp = {
   dateName(date) {
     const now=this.C.today();return date===now?'Oggi':date===this.C.add(now,-1)?'Ieri':this.fmt(date,{day:'numeric',month:'long',...(date.slice(0,4)!==now.slice(0,4)?{year:'numeric'}:{})});
   },
-  quoteHTML(quote) {
-    const text=this.e(quote),phrase='di cui tuo padre sarebbe orgoglioso.';
-    return text.includes(phrase)?text.replace(phrase,`<em>${phrase}</em>`):text.replace(/tuo padre/g,'<em>tuo padre</em>');
-  },
   areaCards(full=true) {
     const data=PrimeStore.data,r=this.C.day(data,this.selected);
     return ['Corpo','Studio','Progetti'].map(area=>{
@@ -132,15 +112,15 @@ const DailyApp = {
   },
   taskRow(task,date=this.selected,home=false) {
     const e=this.e,kind=home?task.category:'Attività';
-    return `<div class="diary-row ${task.completed?'is-done':''}"><input type="checkbox" class="task-check" data-toggle="${e(task.id)}" data-toggle-date="${date}" aria-label="Completa ${e(task.title)}" ${task.completed?'checked':''} ${date>this.C.today()?'disabled':''}><button class="row-copy" data-edit-record="${e(task.id)}" data-record-date="${date}">${e(task.title)}${task.reminder?this.icon('bell','row-reminder'):''}</button><span class="type-badge ${home?'category-'+task.category.toLowerCase():'type-task'}">${e(kind)}</span>${home?'':`<button class="icon-button row-more" data-item-task="${e(task.id)}" data-record-date="${date}" aria-label="Opzioni ${e(task.title)}">${this.icon('more')}</button>`}</div>`;
+    return `<div class="diary-row ${task.completed?'is-done':''}"><input type="checkbox" class="task-check" data-toggle="${e(task.id)}" data-toggle-date="${date}" aria-label="Completa ${e(task.title)}" ${task.completed?'checked':''} ${date>this.C.today()?'disabled':''}><button class="row-copy" data-edit-record="${e(task.id)}" data-record-date="${date}">${e(task.title)}${task.reminder?this.icon('bell','row-reminder'):''}</button><span class="type-badge ${home?'category-'+task.category.toLowerCase():'type-task'}">${e(kind)}</span><button class="icon-button row-more" data-item-task="${e(task.id)}" data-record-date="${date}" aria-label="Opzioni ${e(task.title)}">${this.icon('more')}</button></div>`;
   },
   renderHome() {
     if(!PrimeStore.data)return;
     const C=this.C,data=PrimeStore.data,r=C.day(data,this.selected),b=C.block(data,this.selected),now=C.today();
-    const tasks=r.priorities.map(id=>r.tasks.find(t=>t.id===id)).filter(Boolean),quote=DAILY_QUOTES[(data.dailyQuoteIndex||0)%DAILY_QUOTES.length];
+    const tasks=r.priorities.map(id=>r.tasks.find(t=>t.id===id)).filter(Boolean),quote=DAILY_QUOTES[C.quoteIndex(data,now,DAILY_QUOTES.length)];
     const hour=new Date().getHours(),greeting=hour<12?'Buongiorno':hour<18?'Buon pomeriggio':'Buonasera';
     const blocks=Array.from({length:90},(_,i)=>{const date=C.add(b.start,i),status=C.status(data,date);return `<button class="day-block ${status} ${date===now?'today-block':''}" data-review-date="${date}" title="${this.fmt(date)}" aria-label="${this.fmt(date)} · ${status==='green'?'Giornata positiva':status==='red'?'Da migliorare':'Non valutata'}"></button>`;}).join('');
-    document.getElementById('screenHome').innerHTML=`<header class="home-heading"><div><h1>${greeting}, Vince <span>👋</span></h1><p>${this.fmt(this.selected,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div><button class="sun-button" data-action="review" aria-label="Valuta la giornata e cambia data">${this.icon('sun')}</button></header><section class="tracker-card"><div class="card-title-row"><h2>I miei 90 giorni</h2><span class="day-counter"><b>${Math.max(0,b.number)}</b>/90</span></div><div class="day-blocks" aria-label="Tracker di 90 giorni">${blocks}</div></section><button class="quote-card" data-action="quote" aria-label="Cambia frase motivazionale"><blockquote>“${this.quoteHTML(quote)}”</blockquote></button><section class="priority-card"><div class="card-title-row"><h2>Task principali ${this.selected===now?'di oggi':'del giorno'}</h2><span class="priority-counter">${tasks.filter(t=>t.completed).length}/3</span><button class="icon-button add-priority" data-action="priority" aria-label="Aggiungi una priorità">${this.icon('plus')}</button></div>${tasks.map(t=>this.taskRow(t,this.selected,true)).join('')}${Array.from({length:3-tasks.length},()=>'<button class="empty-priority" data-action="priority"><span class="empty-circle"></span>Scegli una priorità</button>').join('')}</section><div class="home-shortcuts" aria-label="Apri un’area">${this.areaCards(false)}</div>`;
+    document.getElementById('screenHome').innerHTML=`<header class="home-heading"><div><h1>${greeting}, Vince <span>👋</span></h1><p>${this.fmt(this.selected,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div><button class="sun-button" data-action="review" aria-label="Valuta la giornata e cambia data">${this.icon('sun')}</button></header><section class="tracker-card"><div class="card-title-row"><h2>I miei 90 giorni</h2><span class="day-counter"><b>${Math.max(0,b.number)}</b>/90</span></div><div class="day-blocks" aria-label="Tracker di 90 giorni">${blocks}</div></section><section class="quote-card" aria-label="Frase motivazionale del giorno"><blockquote>“${this.e(quote)}”</blockquote><div class="quote-footer"><button class="quote-next" data-action="quote" aria-label="Frase successiva">${this.icon('chevron')}<span>Successiva</span></button></div></section><section class="priority-card"><div class="card-title-row"><h2>Task principali ${this.selected===now?'di oggi':'del giorno'}</h2><span class="priority-counter">${tasks.filter(t=>t.completed).length}/3</span><button class="icon-button add-priority" data-action="priority" aria-label="Aggiungi una priorità">${this.icon('plus')}</button></div>${tasks.map(t=>this.taskRow(t,this.selected,true)).join('')}${Array.from({length:3-tasks.length},()=>'<button class="empty-priority" data-action="priority"><span class="empty-circle"></span>Scegli una priorità</button>').join('')}</section><div class="home-shortcuts" aria-label="Apri un’area">${this.areaCards(false)}</div>`;
   },
   renderAreas() {
     if(!PrimeStore.data)return;
@@ -195,6 +175,7 @@ const DailyApp = {
     if(document.getElementById('dayReview').open)document.getElementById('dayReview').close();
     this.editing={kind,...options};const task=options.task,entry=options.entry,item=task||entry||{},date=options.date||entry?.date||this.selected;
     document.getElementById('dailyEditorTitle').textContent=task||entry?'Modifica voce':'Nuova voce';
+    document.getElementById('dailyEditor').classList.toggle('is-editing',!!(task||entry));
     document.getElementById('dailyText').value=task?.title||entry?.text||options.text||'';
     document.getElementById('dailyTaskDate').value=date;document.getElementById('dailyTaskDate').disabled=!!task;
     const preset=date===this.C.today()?'today':date===this.C.add(this.C.today(),-1)?'yesterday':date===this.C.add(this.C.today(),1)?'tomorrow':'custom';
@@ -216,7 +197,27 @@ const DailyApp = {
   openItem(options) {
     options.date=options.date||options.entry?.date||this.selected;
     this.itemAction=options;const r=this.C.day(PrimeStore.data,options.date||this.selected),task=options.task,entry=options.entry,priority=task&&r.priorities.includes(task.id),el=document.getElementById('itemActions');
-    el.innerHTML=`<header class="sheet-header"><h2>${this.e(task?.title||entry?.text)}</h2><button class="icon-button" data-action="close-item" aria-label="Chiudi opzioni voce">${this.icon('close')}</button></header><button data-action="edit-item">Modifica</button>${task?`<button data-action="item-priority">${priority?'Rimuovi dalle priorità':'Scegli come priorità Home'}</button>${options.catalog?'<button data-action="item-schedule">Aggiungi al giorno scelto</button>':''}`:''}<p class="muted-text">${this.fmt(options.date||this.selected)}</p>`;el.showModal();
+    el.innerHTML=`<header class="sheet-header"><h2>${this.e(task?.title||entry?.text)}</h2><button class="icon-button" data-action="close-item" aria-label="Chiudi opzioni voce">${this.icon('close')}</button></header><button data-action="edit-item">${this.icon('pencil')}Modifica</button><button class="delete-action" data-action="delete-item">${this.icon('trash')}Elimina</button>${task?`<button data-action="item-priority">${priority?'Rimuovi dalle priorità':'Scegli come priorità Home'}</button>${options.catalog?'<button data-action="item-schedule">Aggiungi al giorno scelto</button>':''}`:''}<p class="muted-text">${this.fmt(options.date||this.selected)}</p>`;el.showModal();
+  },
+  askDelete() {
+    const item=this.itemAction,value=item?.task||item?.entry;if(!value)return;
+    this.pendingDelete={id:value.id,kind:item.task?'task':item.entry.kind};
+    document.getElementById('itemActions').close();
+    const el=document.getElementById('deleteConfirm');
+    el.setAttribute('aria-labelledby','deleteConfirmTitle');
+    el.setAttribute('aria-describedby','deleteConfirmDescription');
+    el.innerHTML=`<header class="sheet-header"><h2 id="deleteConfirmTitle">Eliminare questa voce?</h2></header><p class="delete-entry-text">${this.e(value.title||value.text)}</p><p id="deleteConfirmDescription">La voce sarà eliminata definitivamente dall’archivio e ${item.task?'da tutte le giornate dello storico in cui compare':'dal diario del suo giorno'}. Questa operazione non si può annullare.</p><p id="deleteConfirmError" role="alert"></p><div class="delete-buttons"><button class="small-button" data-action="cancel-delete">Annulla</button><button class="delete-action" data-action="confirm-delete">${this.icon('trash')}Elimina definitivamente</button></div>`;
+    el.showModal();el.querySelector('[data-action="cancel-delete"]').focus();
+  },
+  cancelDelete() {this.pendingDelete=null;document.getElementById('deleteConfirm').close();},
+  confirmDelete() {
+    if(!this.pendingDelete || !document.getElementById('deleteConfirm').open)return;
+    const ref={...this.pendingDelete};
+    if(this.mutate(data=>this.C.deleteEntry(data,ref))) {
+      this.pendingDelete=null;this.itemAction=null;document.getElementById('deleteConfirm').close();
+      if(document.getElementById('dayReview').open)this.renderReview();
+      UI.showToast('Voce eliminata dall’archivio e dallo storico.');
+    } else document.getElementById('deleteConfirmError').textContent=document.getElementById('dailyAlert').textContent;
   },
   exportBackup() {const blob=new Blob([JSON.stringify(PrimeStore.data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='prime-dashboard-'+this.C.today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);},
   bind() {
@@ -241,7 +242,7 @@ const DailyApp = {
         this.navigate(date);if(document.getElementById('dayReview').open)this.renderReview();return;
       }
       if(action==='review')this.openReview();
-      if(action==='quote')this.mutate(data=>{data.dailyQuoteIndex=((data.dailyQuoteIndex||0)+1)%DAILY_QUOTES.length;});
+      if(action==='quote')this.mutate(data=>this.C.nextQuote(data,this.C.today(),DAILY_QUOTES.length));
       if(action==='priority')this.openEditor('task',{priority:true});
       if(action==='cancel')document.getElementById('dailyEditor').close();
       if(action==='back')UI.switchTab('Aree');
@@ -258,6 +259,9 @@ const DailyApp = {
       if(action==='close-search'){this.filtersOpen=false;this.query='';this.completion='all';this.dateScope='all';this.renderDetail();}
       if(action==='reset-filters'){this.query='';this.kind='all';this.completion='all';this.dateScope='all';this.renderDetail();}
       if(action==='journal'){this.areaView='journal';this.renderDetail();}
+      if(action==='delete-item')this.askDelete();
+      if(action==='cancel-delete')this.cancelDelete();
+      if(action==='confirm-delete')this.confirmDelete();
       if(action==='edit-item'){const item=this.itemAction;document.getElementById('itemActions').close();this.openEditor(item.task?'task':item.entry.kind,item);}
       if(action==='item-priority'||action==='item-schedule'){
         const item=this.itemAction;document.getElementById('itemActions').close();
@@ -289,13 +293,17 @@ const DailyApp = {
       if(ok){document.getElementById('dailyEditor').close();UI.showToast('Voce salvata nel diario.');}
       else document.getElementById('dailyEditorError').textContent=document.getElementById('dailyAlert').textContent;
     });
+    document.getElementById('deleteConfirm').addEventListener('cancel',()=>{this.pendingDelete=null;});
     window.addEventListener('storage',e=>{
       if(e.key!==STORAGE_KEY||!e.newValue)return;
-      if(document.getElementById('dailyEditor').open||['dailyReflection','areaQuickText'].includes(document.activeElement?.id)){this.fail(new Error('L’archivio è cambiato in un’altra scheda. Ricarica prima di continuare.'));return;}
+      if(document.getElementById('dailyEditor').open||document.getElementById('itemActions').open||document.getElementById('deleteConfirm').open||['dailyReflection','areaQuickText'].includes(document.activeElement?.id)){this.fail(new Error('L’archivio è cambiato in un’altra scheda. Ricarica prima di continuare.'));return;}
       try{PrimeStore.data=this.C.migrate(JSON.parse(e.newValue));this.lastRaw=e.newValue;UI.renderAll();if(document.getElementById('dayReview').open)this.renderReview();}catch(err){this.fail(err);}
     });
     this.lastToday=this.C.today();this.reminded=new Set();
-    setInterval(()=>{const now=this.C.today();if(now!==this.lastToday){if(this.selected===this.lastToday&&!document.getElementById('dailyEditor').open&&!document.getElementById('dayReview').open)this.navigate(now);this.lastToday=now;}this.checkReminders();},60000);
+    const refreshDay=()=>{const now=this.C.today();if(now!==this.lastToday){if(this.selected===this.lastToday&&!document.getElementById('dailyEditor').open&&!document.getElementById('dayReview').open)this.selected=now;if(this.mutate(data=>this.C.quoteDay(data,now,DAILY_QUOTES.length)))this.lastToday=now;}this.checkReminders();};
+    setInterval(refreshDay,60000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDay();});
+    window.addEventListener('focus',refreshDay);
     this.checkReminders();
   },
   checkReminders() {

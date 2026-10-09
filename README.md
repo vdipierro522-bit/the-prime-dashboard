@@ -6,9 +6,17 @@ App originale: https://vdipierro522-bit.github.io/the-prime-dashboard/
 
 L’interfaccia segue le quattro viste del riferimento di Vince: Home, panoramica Aree, dettaglio area e Nuova voce. Layout mobile scuro con schede verdi/blu/viola, icone SVG, barre di progresso e righe compatte; la versione desktop conserva le proporzioni verticali del telefono.
 
-Home mostra, in quest’ordine, saluto/data, tracker con 90 blocchi e contatore X/90, frase grande sopra un paesaggio illustrato al tramonto, tre priorità e accessi rapidi alle aree. Toccare la frase la cambia; il sole o un blocco aprono la giornata con selettore date, storico, valutazione e riflessione. I blocchi continuano la stessa cronologia senza azzerare i giorni precedenti. Verde = valutazione positiva; rosso = da migliorare; grigio = non valutata o futura. La valutazione è esplicita e indipendente dal numero di attività. I giorni futuri si possono pianificare, ma non completare o valutare in anticipo.
+Home mostra, in quest’ordine, saluto/data, tracker con 90 blocchi e contatore X/90, frase grande, tre priorità e accessi rapidi alle aree. La scheda della frase mantiene fondo scuro, bordi arrotondati e accento arancione discreto. Il sole o un blocco aprono la giornata con selettore date, storico, valutazione e riflessione. I blocchi continuano la stessa cronologia senza azzerare i giorni precedenti. Verde = valutazione positiva; rosso = da migliorare; grigio = non valutata o futura. La valutazione è esplicita e indipendente dal numero di attività. I giorni futuri si possono pianificare, ma non completare o valutare in anticipo.
 
-Aree contiene Corpo, Studio e Progetti, ciascuna con attività, idee e note modificabili. Le attività si possono assegnare al giorno selezionato e scegliere come priorità. Rimuovere una priorità conserva l’attività nel registro giornaliero. I completamenti restano con la spunta nel loro giorno. Appunti e valutazioni si salvano automaticamente. Le frasi includono richiami rispettosi al ricordo del padre.
+Aree contiene Corpo, Studio e Progetti, ciascuna con attività, idee e note modificabili. Le attività si possono assegnare al giorno selezionato e scegliere come priorità. Rimuovere una priorità conserva l’attività nel registro giornaliero. I completamenti restano con la spunta nel loro giorno. Appunti e valutazioni si salvano automaticamente.
+
+## Leggibilità, eliminazione e frasi — 9 ottobre 2026
+
+Titoli di attività, idee e note a 18 px, testo nei dettagli e nella modifica a 22 px, campi di inserimento a 18 px. Le righe vanno a capo senza ellissi; i badge mantengono dimensioni secondarie e lo spazio si adatta ai testi lunghi.
+
+Il menu di ogni voce offre Modifica con matita ed Elimina con cestino rosso. Elimina apre una conferma, con Annulla inizialmente selezionato. Una conferma elimina l’attività dal catalogo e da tutte le sue copie e priorità giornaliere, oppure l’idea/nota dal diario; le altre voci, date, riflessioni e valutazioni restano intatte. Le vecchie statistiche aggregate senza riferimenti individuali rimangono conservate. Un errore di salvataggio ripristina i dati in memoria e lascia aperta la conferma con l’errore. Annulla o Esc non modifica l’archivio.
+
+Home utilizza esclusivamente le 30 frasi fornite da Vince, senza modalità alternative. Testo bianco di almeno 22 px. La frase viene registrata per la data corrente del dispositivo e rimane uguale dopo refresh. Successiva avanza e salva la selezione di quel giorno; il giorno dopo continua dalla selezione precedente. I giorni saltati avanzano la sequenza del numero di giorni trascorsi; dopo 30 si torna a 1. La rotazione continua anche al cambio di giorno con l’app aperta o al ritorno in primo piano. Consultare una data storica nel diario non cambia la frase di oggi.
 
 Il Planner è rimosso dall’interfaccia e non viene più inizializzato. Gli eventi, le ricorrenze e le impostazioni già salvati restano intatti nell’archivio ed esportabili nel backup. Inbox e obiettivi precedenti rimangono accessibili da Aree. Scorciatoie: 1 Home, 2 Aree, 3 Inbox.
 
@@ -18,7 +26,7 @@ Nuova voce è una schermata intera: tipo Attività/Idea/Nota, testo, schede Area
 
 ## Dati e migrazione
 
-La chiave originale PRIME_DASHBOARD_STORE_v1 è invariata. Prima della migrazione viene copiata in PRIME_DASHBOARD_STORE_v1_before_daily_v1. Campi originali, configurazione, eventi, obiettivi, Inbox e storico aggregato sono conservati. dailyRecords, areaEntries, dailySchema, dailyMigratedOn e dailyQuoteIndex estendono lo stesso archivio.
+La chiave originale PRIME_DASHBOARD_STORE_v1 è invariata. Prima della migrazione viene copiata in PRIME_DASHBOARD_STORE_v1_before_daily_v1. Campi originali, configurazione, eventi, obiettivi, Inbox e storico aggregato sono conservati. dailyRecords, areaEntries, dailySchema, dailyMigratedOn e brutalQuotes estendono lo stesso archivio. Gli indici delle frasi precedenti restano conservati come campi inattivi.
 
 Le attività precedenti prive di data sono conservate, con le spunte originali, nel giorno della migrazione. I conteggi storici non permettono di ricostruire titoli o date dei completamenti: per quei giorni è mostrato il conteggio originale. Nessuna attività passata viene inventata. Ogni assegnazione successiva crea una copia indipendente per quel giorno; le modifiche al catalogo non riscrivono gli altri giorni.
 
@@ -31,3 +39,5 @@ App statica senza dipendenze: servire questa cartella con un server HTTP o usare
 node tests/daily-store.cjs verifica conservazione dei campi originali, backup, migrazione idempotente, spunte giornaliere, tre priorità, valutazioni, blocchi di 90 giorni, cambio anno e ora legale, JSON invalido, spazio esaurito, conflitti fra schede e primo uso vuoto; verifica anche ricerca, filtri combinati, separazione delle aree e completamento giornaliero nel catalogo. daily-core.js contiene le regole; daily-app.js integra l’interfaccia con PrimeStore e UI originali.
 
 node tests/reference-entry.cjs verifica nuovi campi delle voci, modifica delle copie giornaliere, priorità Home, limite atomico di tre, date di idee/note, promemoria, ricaricamento e conservazione dei campi originali.
+
+node tests/readability-delete-quotes.cjs verifica eliminazione permanente di attività/idee/note, pulizia delle copie e priorità nelle date, isolamento delle altre voci, conferma/annullamento, ripristino su errore di salvataggio, persistenza, rotazione giornaliera, selezione manuale, giorni saltati e ciclo di 30 frasi. Le eliminazioni di prova operano esclusivamente su dati temporanei in memoria.

@@ -134,5 +134,43 @@
     }
     const entry={id:uid(),...updates};data.areaEntries.push(entry);return entry.id;
   }
-  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status,journal,catalog,writeEntry};
+  function deleteEntry(data,ref) {
+    if (!ref || !['task','idea','note'].includes(ref.kind) || typeof ref.id!=='string' || !ref.id) throw new Error('Voce non valida.');
+    if(ref.kind==='task') {
+      const exists=data.tasks.some(t=>t.id===ref.id) || Object.values(data.dailyRecords).some(r=>r.tasks.some(t=>t.id===ref.id));
+      if(!exists) throw new Error('Attività non trovata.');
+      data.tasks=data.tasks.filter(t=>t.id!==ref.id);
+      for(const record of Object.values(data.dailyRecords)) {
+        record.tasks=record.tasks.filter(t=>t.id!==ref.id);
+        record.priorities=record.priorities.filter(id=>id!==ref.id);
+      }
+    } else {
+      if(!data.areaEntries.some(e=>e.id===ref.id && e.kind===ref.kind)) throw new Error('Voce non trovata.');
+      data.areaEntries=data.areaEntries.filter(e=>e.id!==ref.id || e.kind!==ref.kind);
+    }
+  }
+  // Each day's selection is recorded in the original archive. A manual change
+  // also sets the starting point for the next day, including skipped days.
+  function quoteIndex(data,date=today(),count=30) {
+    if(!valid(date) || !Number.isInteger(count) || count<1) throw new Error('Rotazione delle frasi non valida.');
+    const state=data.brutalQuotes;
+    if(!state) return 0;
+    if(!valid(state.startDate) || !state.indices || typeof state.indices!=='object' || Array.isArray(state.indices)) throw new Error('Archivio delle frasi non valido.');
+    const dates=Object.keys(state.indices).filter(d=>valid(d) && d<=date).sort();
+    const previous=dates.at(-1),index=previous ? state.indices[previous] : 0;
+    if(!Number.isInteger(index) || index<0 || index>=count) throw new Error('Indice della frase non valido.');
+    return ((index+distance(date,previous||state.startDate))%count+count)%count;
+  }
+  function quoteDay(data,date=today(),count=30) {
+    const index=quoteIndex(data,date,count);
+    if(!data.brutalQuotes) data.brutalQuotes={startDate:date,indices:{}};
+    data.brutalQuotes.indices[date]=index;
+    return index;
+  }
+  function nextQuote(data,date=today(),count=30) {
+    const index=(quoteDay(data,date,count)+1)%count;
+    data.brutalQuotes.indices[date]=index;
+    return index;
+  }
+  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status,journal,catalog,writeEntry,deleteEntry,quoteIndex,quoteDay,nextQuote};
 });
