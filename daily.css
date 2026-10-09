@@ -47,7 +47,7 @@ button:disabled{opacity:.42;cursor:default;}
 .task-check,.empty-circle{appearance:none;display:grid;place-content:center;flex:none;width:21px;height:21px;border-radius:50%;border:2px solid #485c73;background:#050b13;margin:0;}
 .task-check{cursor:pointer;}
 .task-check:checked{background:#00cb7b;border-color:#00e590;box-shadow:0 0 8px #00cd7422;}
-.task-check:checked:before{content:'âœ“';font-size:13px;color:#032015;line-height:1;}
+.task-check:checked:before{content:'\2713';font-size:13px;color:#032015;line-height:1;}
 .task-check:disabled{opacity:.5;cursor:default;}
 .row-copy{min-width:0;padding:0;text-align:left;border:0;background:transparent;font-size:18px;line-height:1.45;color:#edf1f7;white-space:pre-wrap;overflow-wrap:anywhere;}
 .priority-card .row-copy{font-size:18px;}
