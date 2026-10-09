@@ -69,5 +69,29 @@
   function status(data,date,anchor=today()) {
     return date>anchor ? 'gray' : day(data,date).rating || 'gray';
   }
-  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status};
+  const searchable = text => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('it-IT');
+  function matches(item, filters={}) {
+    if (filters.kind && filters.kind!=='all' && item.kind!==filters.kind) return false;
+    if (filters.date && item.date!==filters.date) return false;
+    if (filters.status && filters.status!=='all') {
+      if (item.kind!=='task' || !!item.task.completed !== (filters.status==='done')) return false;
+    }
+    return searchable(item.task?.title ?? item.entry?.text).includes(searchable(filters.query).trim());
+  }
+  function journal(data,area,filters={}) {
+    const items=[];
+    for (const [date,record] of Object.entries(data.dailyRecords)) {
+      if (!valid(date)) continue;
+      for (const task of record.tasks) if (task.category===area) items.push({kind:'task',date,task});
+    }
+    for (const entry of data.areaEntries) {
+      if (entry.area===area && !entry.archived && valid(entry.date)) items.push({kind:entry.kind,date:entry.date,entry});
+    }
+    return items.filter(item=>matches(item,filters)).sort((a,b)=>b.date.localeCompare(a.date));
+  }
+  function catalog(data,area,selected,filters={}) {
+    const record=day(data,selected);
+    return data.tasks.filter(t=>t.category===area && !t.archived).map(task=>({kind:'task',date:selected,task:{...task,completed:!!record.tasks.find(t=>t.id===task.id)?.completed},source:task})).filter(item=>matches(item,filters));
+  }
+  return {iso,today,valid,add,distance,clone,uid,day,migrate,assign,toggle,rate,block,status,journal,catalog};
 });

@@ -8,7 +8,9 @@ Home mostra una frase grande, tre priorità per la data selezionata, il tracker 
 
 Aree contiene Corpo, Studio e Progetti, ciascuna con attività, idee e note modificabili. Le attività si possono assegnare al giorno selezionato e scegliere come priorità. Rimuovere una priorità conserva l’attività nel registro giornaliero. I completamenti restano con la spunta nel loro giorno. Appunti e valutazioni si salvano automaticamente. Le frasi includono richiami rispettosi al ricordo del padre.
 
-Planner, Inbox e obiettivi precedenti rimangono accessibili da Aree. Il Planner conserva viste, eventi, ricorrenze e impostazioni esistenti. Scorciatoie: 1 Home, 2 Aree, 3 Inbox.
+Il Planner è rimosso dall’interfaccia e non viene più inizializzato. Gli eventi, le ricorrenze e le impostazioni già salvati restano intatti nell’archivio ed esportabili nel backup. Inbox e obiettivi precedenti rimangono accessibili da Aree. Scorciatoie: 1 Home, 2 Aree, 3 Inbox.
+
+Aree mostra tre schede Corpo/Studio/Progetti con conteggi, un diario raggruppato per data e le attività salvate da assegnare ai giorni. Ricerca senza distinzione di maiuscole e accenti; filtri combinabili per attività/idee/note, completamento e giorno selezionato. I filtri operano nell’area aperta e non modificano i dati. Le spunte nel diario agiscono sulla data della riga, anche quando è diversa dal giorno selezionato. Idee e note ricevono la data scelta; gli appunti esistenti mantengono la propria data. Modificare una voce storica aggiorna solo quella giornata e il catalogo, lasciando le altre giornate intatte.
 
 ## Dati e migrazione
 
@@ -22,4 +24,4 @@ Il primo uso è vuoto, senza dati dimostrativi. JSON danneggiato, spazio esaurit
 
 App statica senza dipendenze: servire questa cartella con un server HTTP o usare GitHub Pages. Manifest e configurazione Pages sono conservati; i riferimenti ai file includono una versione per aggiornare la cache.
 
-node tests/daily-store.cjs verifica conservazione dei campi originali, backup, migrazione idempotente, spunte giornaliere, tre priorità, valutazioni, blocchi di 90 giorni, cambio anno e ora legale, JSON invalido, spazio esaurito, conflitti fra schede e primo uso vuoto. daily-core.js contiene le regole; daily-app.js integra l’interfaccia con PrimeStore, UI e Calendar originali.
+node tests/daily-store.cjs verifica conservazione dei campi originali, backup, migrazione idempotente, spunte giornaliere, tre priorità, valutazioni, blocchi di 90 giorni, cambio anno e ora legale, JSON invalido, spazio esaurito, conflitti fra schede e primo uso vuoto; verifica anche ricerca, filtri combinati, separazione delle aree e completamento giornaliero nel catalogo. daily-core.js contiene le regole; daily-app.js integra l’interfaccia con PrimeStore e UI originali.

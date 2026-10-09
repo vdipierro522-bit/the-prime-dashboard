@@ -47,7 +47,7 @@ function storeContext(raw,fail=false) {
     localStorage:{getItem:k=>values.get(k)??null,setItem:(k,v)=>{if(fail)throw new Error('Quota');values.set(k,v);}},
   };
   vm.createContext(context);
-  for(const f of ['calendar-core.js','app.js','calendar.js','daily-core.js','daily-app.js']) vm.runInContext(fs.readFileSync(path.join(dir,f),'utf8'),context,{filename:f});
+  for(const f of ['app.js','daily-core.js','daily-app.js']) vm.runInContext(fs.readFileSync(path.join(dir,f),'utf8'),context,{filename:f});
   vm.runInContext('DailyApp.prepareDOM=()=>{};',context);
   return {context,values,run:s=>vm.runInContext(s,context)};
 }
@@ -67,3 +67,30 @@ assert.equal(quota.values.get('PRIME_DASHBOARD_STORE_v1'),raw);
 const clean=storeContext(null);clean.run('PrimeStore.init()');
 assert.equal(clean.run('PrimeStore.data.tasks.length'),0);
 console.log('PASS: migration, original fields, backup, dated checkmarks, ratings, future guards, 90-day blocks, DST/year dates, reload, storage conflicts, malformed JSON, quota and empty first use.');
+
+// Queries must use each day's snapshot, never today's catalog completion.
+const diary=C.migrate(C.clone(original),'2026-10-09');
+C.assign(diary,'2026-10-08',original.tasks[0]);
+C.toggle(diary,'2026-10-08','a','2026-10-09');
+diary.dailyRecords['2026-10-08'].tasks[0].title='Proprietà esponenziali';
+diary.areaEntries=[
+  {id:'n',area:'Studio',kind:'note',date:'2026-10-08',text:'Errore sulle proprietà'},
+  {id:'i',area:'Studio',kind:'idea',date:'2026-10-09',text:'Provare nuovi esercizi'},
+  {id:'other',area:'Corpo',kind:'note',date:'2026-10-08',text:'Proprietà'},
+  {id:'archived',area:'Studio',kind:'note',date:'2026-10-08',text:'Proprietà',archived:true}
+];
+assert.equal(C.journal(diary,'Studio',{query:' PROPRIETA '}).length,2);
+assert.equal(C.journal(diary,'Studio',{query:'proprieta',kind:'note'}).length,1);
+assert.equal(C.journal(diary,'Studio',{query:'proprieta',status:'done'}).length,1);
+assert.equal(C.journal(diary,'Studio',{status:'done'}).length,2);
+assert.equal(C.journal(diary,'Studio',{status:'open'}).length,0);
+assert.equal(C.journal(diary,'Studio',{date:'2026-10-08'}).length,2);
+assert.equal(C.journal(diary,'Studio',{kind:'idea',date:'2026-10-08'}).length,0);
+assert.equal(C.journal(diary,'Studio')[0].date,'2026-10-09');
+assert.equal(C.catalog(diary,'Studio','2026-10-10',{status:'done'}).length,0);
+assert.equal(C.catalog(diary,'Studio','2026-10-08',{status:'done'}).length,1);
+assert.deepEqual(C.migrate(C.clone(diary),'2026-10-10'),diary);
+const index=fs.readFileSync(path.join(dir,'index.html'),'utf8');
+assert.doesNotMatch(index,/screenPlanner|navTabPlanner|plannerModal|actionAddToPlanner|src="calendar|href="calendar/);
+assert.doesNotMatch(fs.readFileSync(path.join(dir,'app.js'),'utf8'),/Calendar\.(init|bindEvents|render|setActive)/);
+console.log('PASS: journal snapshots, accent-insensitive search, combined kind/date/completion filters, descending dates, area isolation, archived entries, catalog completion per day and Planner removed.');

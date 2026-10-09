@@ -79,5 +79,37 @@ body {background:#0b0d10;}
 .daily-alert {position:fixed;z-index:500;top:0;left:0;right:0;padding:16px;background:#432124;color:#fff;font-size:14px;line-height:1.5;}
 .daily-dialog-error {color:#ecaaaa!important;}
 :focus-visible {outline:2px solid #acd9c3;outline-offset:3px;}
+.area-cards,.home-areas {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0 30px;}
+.area-card {--area-accent:#87c9aa;display:grid;text-align:left;gap:7px;padding:18px;border:1px solid #2a3931;border-radius:12px;background:#101a16;color:#e7e9ec;font:inherit;cursor:pointer;min-width:0;}
+.area-card.area-studio {--area-accent:#80b7dd;background:#101820;border-color:#283a47;}
+.area-card.area-progetti {--area-accent:#b59ad9;background:#191421;border-color:#3a2f48;}
+.area-card[aria-pressed=true],.area-card:hover {border-color:var(--area-accent);}
+.area-symbol {font-size:22px;color:var(--area-accent);line-height:1;}
+.area-card strong {font-size:16px;font-weight:600;}
+.area-card small {font-size:11px;line-height:1.6;color:#a2aab5;}
+.area-counts {display:flex;justify-content:space-between;gap:5px;font-size:10px;color:#acb3bd;margin-top:8px;}
+.area-counts b {display:block;color:#e4e9ee;font-size:14px;font-weight:500;}
+.area-progress {font-size:10px;color:var(--area-accent);margin-top:3px;}
+.home-areas {margin-top:30px;}
+.area-section-head h2 {font-size:20px;}
+.area-datebar {justify-content:flex-start;margin:14px 0;}
+.area-view-tabs,.area-kind-filters {display:flex;gap:6px;flex-wrap:wrap;margin:16px 0;}
+.area-search-row {display:flex;gap:8px;flex-wrap:wrap;}
+.area-search-row input {flex:1;min-width:180px;}
+.area-search-row select {font-size:12px;}
+.area-kind-filters .daily-button[aria-pressed=true] {background:#172820;color:var(--daily-green);border-color:#36493e;}
+.journal-day {border:1px solid #292f37;border-radius:12px;padding:18px;margin-bottom:16px;}
+.journal-day.selected-day {border-color:#4b6657;}
+.journal-day h3 {font-size:14px;font-weight:500;margin:0;text-transform:capitalize;}
+.journal-day .daily-task {margin-bottom:8px;}
+.journal-day .section-head {gap:8px;}
+.entry-kind {display:inline-block;border-radius:5px;padding:2px 6px;font-size:10px;background:#292419;color:#ddc68b;}
+.entry-kind.kind-note {background:#251e30;color:#c7aade;}
+.area-entry {white-space:normal;}
+.area-entry p,.journal-reflection p {white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;}
+.journal-reflection {padding:12px 3px;font-size:13px;color:#b8c1bb;}
+.journal-reflection small {font-size:11px;color:var(--daily-muted);}
+.area-empty {padding:28px 16px;border:1px dashed #333a43;border-radius:10px;color:var(--daily-muted);font-size:13px;line-height:1.7;}
+@media(max-width:650px){.area-cards,.home-areas{gap:7px;}.area-card{padding:12px 9px;}.area-card strong{font-size:14px;}.area-counts{flex-wrap:wrap;row-gap:7px;font-size:9px;}.area-counts span{min-width:40%;}.area-search-row input{width:100%;flex-basis:100%;}.area-search-row select{flex:1;min-width:0;}.journal-day{padding:12px;}.area-section-head{align-items:flex-start;}.area-section-head .daily-actions{gap:4px;}.area-section-head .daily-button{padding:8px;}.journal-day .daily-task{flex-wrap:wrap;}.journal-day .task-copy{flex-basis:calc(100% - 40px);}.journal-day .daily-task>.daily-button{margin-left:33px;}}
 @media(min-width:769px){.app-viewport.calendar-active{width:100%;max-width:1080px;height:100dvh;border:0;border-radius:0;}.app-viewport.calendar-active .bottom-nav-bar{max-width:1080px;}.app-main-content.calendar-main{padding-top:28px;}}
 @media(max-width:650px){.app-main-content{padding:23px 18px 104px;}.daily-head{align-items:flex-start;flex-direction:column;margin-bottom:26px;}.daily-head h1{font-size:24px;}.daily-datebar{justify-content:flex-start;gap:5px;width:100%;}.daily-datebar .daily-button{padding:8px 10px;}.daily-quote{padding-bottom:22px;}.daily-quote p{font-size:29px;}.daily-grid,.area-panels{grid-template-columns:1fr;gap:25px;}.day-blocks{gap:5px;}.bottom-nav-bar{height:74px;}.daily-grid>section+section{border-top:1px solid #24282d;padding-top:22px;}.area-tabs{gap:6px;}.area-tabs button{padding:10px 7px;}.area-activity .daily-actions{margin-left:0;}.app-main-content.calendar-main{padding-top:18px;}}

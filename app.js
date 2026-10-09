@@ -194,7 +194,7 @@ const PrimeStore = {
   addPlannerBlock(blockData) {
     const newBlock = {
       id: 'p-' + (globalThis.crypto?.randomUUID?.() || Date.now() + '-' + Math.random().toString(16).slice(2)),
-      date: blockData.date || PrimeCalendar.today(),
+      date: blockData.date || PrimeDaily.today(),
       allDay: !!blockData.allDay,
       repeat: blockData.repeat || 'none',
       dayIndex: typeof blockData.dayIndex === 'number' ? blockData.dayIndex : this.data.activePlannerDay,
@@ -334,7 +334,6 @@ const UI = {
 
   renderAll() {
     this.renderHome();
-    this.renderPlanner();
     this.renderInbox();
   },
 
@@ -358,19 +357,10 @@ const UI = {
 
     // Scroll to top of content
     document.getElementById('mainContent').scrollTop = 0;
-
-    Calendar.setActive(tabName === 'Planner');
-
     // Configure Floating Action Button (FAB)
     const fab = document.getElementById('globalFabBtn');
     if (fab) {
-      if (tabName === 'Planner') {
-        fab.style.display = 'flex';
-      } else if (tabName === 'Home') {
-        fab.style.display = 'none'; // Home has mini add button inside card
-      } else if (tabName === 'Inbox') {
-        fab.style.display = 'none'; // Inbox has top big input field
-      }
+      fab.style.display = 'none';
     }
   },
 
@@ -475,10 +465,9 @@ const UI = {
   },
 
   onSelectHomeDay(index) {
-    // Jump to Planner for this day
-    Calendar.selectDayIndex(index);
-    this.switchTab('Planner');
-    this.renderPlanner();
+    // Open the dated Home record.
+    DailyApp.navigate(PrimeDaily.add(PrimeDaily.today(), index));
+    this.switchTab('Home');
   },
 
   renderTasks() {
@@ -570,10 +559,8 @@ const UI = {
   },
 
   // ------------------------------------------------------------------------
-  // PLANNER SCREEN RENDERING
+  // INBOX SCREEN RENDERING
   // ------------------------------------------------------------------------
-  renderPlanner() { Calendar.render(); },
-  selectPlannerDay(index) { Calendar.selectDayIndex(index); },
 
   renderInbox() {
     let items = PrimeStore.getInboxItems(this.activeInboxFilter === 'Archivio' ? 'all' : this.activeInboxFilter);
@@ -676,10 +663,6 @@ const UI = {
     modal.classList.add('show');
     setTimeout(() => input.focus(), 150);
   },
-
-  // Planner Modal
-  openAddPlannerModal(prefillTitle = '') { Calendar.openEvent(null, { title: prefillTitle }); },
-  editPlannerModal(id) { Calendar.openEvent(id); },
 
   // Goals Modal
   openGoalsModal() {
@@ -845,15 +828,10 @@ const UI = {
     const fabBtn = document.getElementById('globalFabBtn');
     if (fabBtn) {
       fabBtn.addEventListener('click', () => {
-        if (this.activeTab === 'Planner') {
-          this.openAddPlannerModal();
-        } else {
-          this.openAddTaskModal();
-        }
+        this.openAddTaskModal();
       });
     }
 
-    Calendar.bindEvents();
 
     // Goals Modal Buttons
     const openGoalsBtn = document.getElementById('openGoalsModalBtn');
@@ -909,20 +887,6 @@ const UI = {
         
         // Seamlessly switch to Home view so Vince sees it immediately
         setTimeout(() => this.switchTab('Home'), 400);
-      });
-    }
-
-    // Inbox Action Sheet: AGGIUNGI AL PLANNER
-    const actionAddToPlanner = document.getElementById('actionAddToPlanner');
-    if (actionAddToPlanner) {
-      actionAddToPlanner.addEventListener('click', () => {
-        if (!this.selectedInboxItem) return;
-        const text = this.selectedInboxItem.text;
-        this.closeAllModals();
-        this.switchTab('Planner');
-        setTimeout(() => {
-          this.openAddPlannerModal(text);
-        }, 200);
       });
     }
 
@@ -1005,7 +969,6 @@ const UI = {
 document.addEventListener('DOMContentLoaded', () => {
   try {
   PrimeStore.init();
-  Calendar.init();
   UI.init();
   console.log("🚀 The Prime Dashboard initialized successfully.");
   } catch (error) {
